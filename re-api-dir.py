@@ -4,28 +4,31 @@ import re
 # 定义匹配的正则表达式和分类标签
 pattern_groups = {
     "PagePath Matches": [
-        (re.compile(r'pagePath:\s*"(.*?)"'), "pagePath_double_quotes"),
-        (re.compile(r"pagePath:\s*'(.*?)'"), "pagePath_double_quotes"),
+        (re.compile(r'pagePath:\s*"(.*?)"'), ""),
+        (re.compile(r"pagePath:\s*'(.*?)'"), ""),
     ],
     "Path Matches": [
-        (re.compile(r'path:\s*"(.*?)"'), "path_double_quotes"),
-        (re.compile(r"path:\s*'(.*?)'"), "path_double_quotes"),
-        (re.compile(r'url:\s*"([^"]+)"'), "path_double_quotes"),
-        (re.compile(r'url: "([^"]+)'), "path_double_quotes"),
+        (re.compile(r'path:\s*"(.*?)"'), ""),
+        (re.compile(r"path:\s*'(.*?)'"), ""),
+        (re.compile(r'url:\s*"([^"]+)"'), ""),
+        (re.compile(r'url: "([^"]+)'), ""),
     ],
     "GET Matches": [
-        (re.compile(r'get\([^()]*?"([^"]*?)"[^()]*?\)'), "get_double_quotes"),
-        (re.compile(r"get\([^()]*?['\"]([^'\"]*?)['\"][^()]*?\)"), "get_double_quotes"),
+        (re.compile(r'get\([^()]*?"([^"]*?)"[^()]*?\)'), ""),
+        (re.compile(r"get\([^()]*?['\"]([^'\"]*?)['\"][^()]*?\)"), ""),
     ],
     "POST Matches": [
-        (re.compile(r'post\([^()]*?"([^"]*?)"[^()]*?\)'), "post_double_quotes"),
-        (re.compile(r"POST\([^()]*?['\"]([^'\"]*?)['\"][^()]*?\)"), "post_double_quotes"),
+        (re.compile(r'post\([^()]*?"([^"]*?)"[^()]*?\)'), ""),
+        (re.compile(r"POST\([^()]*?['\"]([^'\"]*?)['\"][^()]*?\)"), ""),
+    ],
+    "Object": [
+        (re.compile(r'\b[a-zA-Z][a-zA-Z0-9]*\b:\[\{\s*\b[a-zA-Z][a-zA-Z0-9]*\b:""'), "")
     ]
 }
 
 # 定义要遍历的目录
-api_js_directory = "D:\Desktop\杂项\缴费"
-output_file = "D:\Desktop\杂项\缴费\path.txt"
+api_js_directory = "js"
+output_file = "path.txt"
 
 # 初始化结果存储
 matched_results = {group: [] for group in pattern_groups}
@@ -45,8 +48,8 @@ for root, _, files in os.walk(api_js_directory):
                             matches = pattern.findall(content)
                             if matches:
                                 for match in matches:
-                                    # 按分组保存匹配的路径和标签
-                                    matched_results[group].append((match, label))
+                                    # 按分组保存匹配的路径、标签和文件名
+                                    matched_results[group].append((match, label, file))
             except Exception as e:
                 print(f"无法读取文件 {file_path}: {e}")
 
@@ -57,10 +60,15 @@ try:
             if results:
                 f.write(f"===== {group} =====\n")
                 # 去重、排序并对齐
-                unique_results = sorted(set(results), key=lambda x: x[0])
-                max_length = max(len(path) for path, _ in unique_results)
-                for path, label in unique_results:
-                    f.write(f"{path.ljust(max_length)}\t{label}\n")
+                unique_results = sorted(set(results), key=lambda x: (x[0], x[2]))  # 按路径和文件名排序
+                
+                # 计算各列最大宽度
+                max_path_len = max(len(item[0]) for item in unique_results)
+                max_label_len = max(len(item[1]) for item in unique_results)
+                
+                # 写入格式化结果
+                for path, label, filename in unique_results:
+                    f.write(f"{path.ljust(max_path_len)}\t{label.ljust(max_label_len)}\t{filename}\n")
                 f.write("\n")  # 分块之间加空行
     print(f"匹配的路径已按分类写入 {output_file}")
 except Exception as e:
