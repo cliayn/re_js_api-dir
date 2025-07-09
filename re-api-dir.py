@@ -1,25 +1,24 @@
 import os
 import re
+import regex
 
 # 定义匹配的正则表达式和分类标签
 pattern_groups = {
     "PagePath Matches": [
-        (re.compile(r'pagePath:\s*"(.*?)"'), ""),
-        (re.compile(r"pagePath:\s*'(.*?)'"), ""),
+        (re.compile(r"(?i)pagePath:\s*[\"'](.*?)[\"']"), "pagePath")
     ],
     "Path Matches": [
-        (re.compile(r'path:\s*"(.*?)"'), ""),
-        (re.compile(r"path:\s*'(.*?)'"), ""),
-        (re.compile(r'url:\s*"([^"]+)"'), ""),
-        (re.compile(r'url: "([^"]+)'), ""),
+        (re.compile(r"(?i)path:\s*[\"'](.*?)[\"']"), "path"),
+        (re.compile(r"(?i)url:\s*[\"']([^\"']+)[\"']"), "url"),
+        (re.compile(r"(?i)name:\s*[\"']([^\"']+)[\"']"), "name"),
     ],
     "GET Matches": [
-        (re.compile(r'get\([^()]*?"([^"]*?)"[^()]*?\)'), ""),
-        (re.compile(r"get\([^()]*?['\"]([^'\"]*?)['\"][^()]*?\)"), ""),
+        (re.compile(r"(?i)get\([^()]*?['\"]([^'\"]*?)['\"][^()]*?\)"), ""),
+        (re.compile(r"(?i)url:['\"]([^'\"]+)['\"],\s*method:\s*['\"]get['\"]"), ""),
     ],
     "POST Matches": [
-        (re.compile(r'post\([^()]*?"([^"]*?)"[^()]*?\)'), ""),
-        (re.compile(r"POST\([^()]*?['\"]([^'\"]*?)['\"][^()]*?\)"), ""),
+        (re.compile(r"(?i)post\([^()]*?['\"]([^'\"]*?)['\"][^()]*?\)"), ""),
+        (re.compile(r"(?i)url:['\"]([^'\"]+)['\"],\s*method:\s*['\"]post['\"]"), ""),
     ],
     "Object": [
         (re.compile(r'\b[a-zA-Z][a-zA-Z0-9]*\b:\[\{\s*\b[a-zA-Z][a-zA-Z0-9]*\b:""'), "")
